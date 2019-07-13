@@ -87,10 +87,23 @@ func (gceCS *GCEControllerServer) CreateVolume(ctx context.Context, req *csi.Cre
 
 	// Apply Parameters (case-insensitive). We leave validation of
 	// the values to the cloud provider.
+
 	params, err := common.ExtractAndDefaultParameters(req.GetParameters())
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "failed to extract parameters: %v", err)
 	}
+
+	// commaSeparatedDiskLabels (e.g. foo=123,bar=456) splits into LabelKeyValueList ([foo=123, bar=456])
+	diskLabelKeyValueList := strings.Split(commaSeparatedDiskLabels, ",")
+	diskLabels := make(map[string]string, len(diskLabelKeyValueList))
+	// diskLabelKeyValueList (e.g. [foo=123, bar=456]) transforms into diskLabels ({ foo: 123, bar: 456 })
+	for _, v := range diskLabelKeyValueList {
+		labelKeyValue := strings.Split(v, "=")
+		labelKey := labelKeyValue[0]
+		labelValue := strings.Join(labelKeyValue[1:], "=")
+		diskLabels[labelKey] = labelValue
+	}
+
 	// Determine the zone or zones+region of the disk
 	var zones []string
 	var volKey *meta.Key
@@ -176,6 +189,9 @@ func (gceCS *GCEControllerServer) CreateVolume(ctx context.Context, req *csi.Cre
 		if err != nil {
 			return nil, status.Error(codes.Internal, fmt.Sprintf("CreateVolume failed to create single zonal disk %#v: %v", name, err))
 		}
+		if len(diskLabels) != 0 {
+			err = gceCS.CloudProvider.SetZonalDiskLabels(ctx, disk, diskLabels)
+		}
 	case replicationTypeRegionalPD:
 		if len(zones) != 2 {
 			return nil, status.Errorf(codes.Internal, fmt.Sprintf("CreateVolume failed to get a 2 zones for creating regional disk, instead got: %v", zones))
@@ -183,6 +199,9 @@ func (gceCS *GCEControllerServer) CreateVolume(ctx context.Context, req *csi.Cre
 		disk, err = createRegionalDisk(ctx, gceCS.CloudProvider, name, zones, params, capacityRange, capBytes, snapshotID)
 		if err != nil {
 			return nil, status.Error(codes.Internal, fmt.Sprintf("CreateVolume failed to create regional disk %#v: %v", name, err))
+		}
+		if len(diskLabels) != 0 {
+			err = gceCS.CloudProvider.SetRegionalDiskLabels(ctx, disk, diskLabels)
 		}
 	default:
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("CreateVolume replication type '%s' is not supported", params.ReplicationType))

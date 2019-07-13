@@ -49,6 +49,8 @@ type GCECompute interface {
 	DeleteDisk(ctx context.Context, volumeKey *meta.Key) error
 	AttachDisk(ctx context.Context, volKey *meta.Key, readWrite, diskType, instanceZone, instanceName string) error
 	DetachDisk(ctx context.Context, deviceName string, instanceZone, instanceName string) error
+	SetZonalDiskLabels(ctx context.Context, disk *CloudDisk, labels map[string]string) error
+	SetRegionalDiskLabels(ctx context.Context, disk *CloudDisk, labels map[string]string) error
 	GetDiskSourceURI(volKey *meta.Key) string
 	GetDiskTypeURI(volKey *meta.Key, diskType string) string
 	WaitForAttach(ctx context.Context, volKey *meta.Key, instanceZone, instanceName string) error
@@ -91,6 +93,23 @@ func (cloud *CloudProvider) ListDisks(ctx context.Context, maxEntries int64, pag
 		return nil, "", err
 	}
 	return diskList.Items, diskList.NextPageToken, nil
+
+func (cloud *CloudProvider) SetZonalDiskLabels(ctx context.Context, disk *CloudDisk, labels map[string]string) error {
+	req := &compute.ZoneSetLabelsRequest{
+		Labels: labels,
+		LabelFingerprint: disk.ZonalDisk.LabelFingerprint,
+	}
+	_, err := cloud.service.Disks.SetLabels(cloud.project, disk.ZonalDisk.Zone, disk.ZonalDisk.Name, req).Context(ctx).Do()
+	return err
+}
+
+func (cloud *CloudProvider) SetRegionalDiskLabels(ctx context.Context, disk *CloudDisk, labels map[string]string) error {
+	req := &compute.ZoneSetLabelsRequest{
+		Labels: labels,
+		LabelFingerprint: disk.RegionalDisk.LabelFingerprint,
+	}
+	_, err := cloud.service.Disks.SetLabels(cloud.project, disk.RegionalDisk.Zone, disk.RegionalDisk.Name, req).Context(ctx).Do()
+	return err
 }
 
 // RepairUnderspecifiedVolumeKey will query the cloud provider and check each zone for the disk specified

@@ -25,8 +25,8 @@ const (
 	ParameterKeyType                 = "type"
 	ParameterKeyReplicationType      = "replication-type"
 	ParameterKeyDiskEncryptionKmsKey = "disk-encryption-kms-key"
-
-	replicationTypeNone = "none"
+	ParameterKeyDiskLabels           = "disk-labels"
+	replicationTypeNone              = "none"
 )
 
 // DiskParameters contains normalized and defaulted disk parameters
@@ -40,6 +40,9 @@ type DiskParameters struct {
 	// Values: {string}
 	// Default: ""
 	DiskEncryptionKMSKey string
+	// Values: {string}
+	// Default: ""
+	DiskLabels string
 }
 
 // ExtractAndDefaultParameters will take the relevant parameters from a map and
@@ -49,6 +52,7 @@ func ExtractAndDefaultParameters(parameters map[string]string) (DiskParameters, 
 		DiskType:             "pd-standard",       // Default
 		ReplicationType:      replicationTypeNone, // Default
 		DiskEncryptionKMSKey: "",                  // Default
+		DiskLabels:           "",                  // Default
 	}
 	for k, v := range parameters {
 		if k == "csiProvisionerSecretName" || k == "csiProvisionerSecretNamespace" {
@@ -67,6 +71,10 @@ func ExtractAndDefaultParameters(parameters map[string]string) (DiskParameters, 
 		case ParameterKeyDiskEncryptionKmsKey:
 			// Resource names (e.g. "keyRings", "cryptoKeys", etc.) are case sensitive, so do not change case
 			p.DiskEncryptionKMSKey = v
+		case ParameterKeyDiskLabels:
+			if v != "" {
+				p.DiskLabels = v
+			}
 		default:
 			return p, fmt.Errorf("parameters contains invalid option %q", k)
 		}
