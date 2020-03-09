@@ -93,10 +93,11 @@ func (cloud *CloudProvider) ListDisks(ctx context.Context, maxEntries int64, pag
 		return nil, "", err
 	}
 	return diskList.Items, diskList.NextPageToken, nil
+}
 
 func (cloud *CloudProvider) SetZonalDiskLabels(ctx context.Context, disk *CloudDisk, labels map[string]string) error {
-	req := &compute.ZoneSetLabelsRequest{
-		Labels: labels,
+	req := &computev1.ZoneSetLabelsRequest{
+		Labels:           labels,
 		LabelFingerprint: disk.ZonalDisk.LabelFingerprint,
 	}
 	_, err := cloud.service.Disks.SetLabels(cloud.project, disk.ZonalDisk.Zone, disk.ZonalDisk.Name, req).Context(ctx).Do()
@@ -104,8 +105,8 @@ func (cloud *CloudProvider) SetZonalDiskLabels(ctx context.Context, disk *CloudD
 }
 
 func (cloud *CloudProvider) SetRegionalDiskLabels(ctx context.Context, disk *CloudDisk, labels map[string]string) error {
-	req := &compute.ZoneSetLabelsRequest{
-		Labels: labels,
+	req := &computev1.ZoneSetLabelsRequest{
+		Labels:           labels,
 		LabelFingerprint: disk.RegionalDisk.LabelFingerprint,
 	}
 	_, err := cloud.service.Disks.SetLabels(cloud.project, disk.RegionalDisk.Zone, disk.RegionalDisk.Name, req).Context(ctx).Do()

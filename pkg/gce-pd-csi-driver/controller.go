@@ -94,7 +94,7 @@ func (gceCS *GCEControllerServer) CreateVolume(ctx context.Context, req *csi.Cre
 	}
 
 	// commaSeparatedDiskLabels (e.g. foo=123,bar=456) splits into LabelKeyValueList ([foo=123, bar=456])
-	diskLabelKeyValueList := strings.Split(commaSeparatedDiskLabels, ",")
+	diskLabelKeyValueList := strings.Split(params.DiskLabels, ",")
 	diskLabels := make(map[string]string, len(diskLabelKeyValueList))
 	// diskLabelKeyValueList (e.g. [foo=123, bar=456]) transforms into diskLabels ({ foo: 123, bar: 456 })
 	for _, v := range diskLabelKeyValueList {
@@ -102,6 +102,9 @@ func (gceCS *GCEControllerServer) CreateVolume(ctx context.Context, req *csi.Cre
 		labelKey := labelKeyValue[0]
 		labelValue := strings.Join(labelKeyValue[1:], "=")
 		diskLabels[labelKey] = labelValue
+	}
+	for k, v := range diskLabels {
+		klog.V(4).Infof("CreateVolume %s has label key %s and value %s", name, k, v)
 	}
 
 	// Determine the zone or zones+region of the disk
