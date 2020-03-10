@@ -34,10 +34,10 @@ endif
 ifndef GCE_PD_CSI_STAGING_VERSION
 	$(error "Must set environment variable GCE_PD_CSI_STAGING_VERSION to staging version")
 endif
-	docker build --build-arg TAG=$(STAGINGVERSION) -t $(STAGINGIMAGE):$(STAGINGVERSION) .
+	podman build --build-arg TAG=$(STAGINGVERSION) -t $(STAGINGIMAGE):$(STAGINGVERSION) .
 
 push-container: build-container
-	gcloud docker -- push $(STAGINGIMAGE):$(STAGINGVERSION)
+	podman push $(STAGINGIMAGE):$(STAGINGVERSION)
 
 test-sanity: gce-pd-driver
 	go test -v -timeout 30s sigs.k8s.io/gcp-compute-persistent-disk-csi-driver/test/sanity -run ^TestSanity$

@@ -103,6 +103,7 @@ func (gceCS *GCEControllerServer) CreateVolume(ctx context.Context, req *csi.Cre
 		labelValue := strings.Join(labelKeyValue[1:], "=")
 		diskLabels[labelKey] = labelValue
 	}
+	klog.V(4).Infof("diskLabels for disk %s has length %v", name, len(diskLabels))
 	for k, v := range diskLabels {
 		klog.V(4).Infof("CreateVolume %s has label key %s and value %s", name, k, v)
 	}
@@ -193,7 +194,11 @@ func (gceCS *GCEControllerServer) CreateVolume(ctx context.Context, req *csi.Cre
 			return nil, status.Error(codes.Internal, fmt.Sprintf("CreateVolume failed to create single zonal disk %#v: %v", name, err))
 		}
 		if len(diskLabels) != 0 {
+			klog.V(4).Infof("setting disk labels disk %v", volKey)
 			err = gceCS.CloudProvider.SetZonalDiskLabels(ctx, disk, diskLabels)
+			if err != nil {
+				klog.Warningf("SetZonalDiskLabels failed for %#v: %v", name, err)
+			}
 		}
 	case replicationTypeRegionalPD:
 		if len(zones) != 2 {
@@ -204,7 +209,13 @@ func (gceCS *GCEControllerServer) CreateVolume(ctx context.Context, req *csi.Cre
 			return nil, status.Error(codes.Internal, fmt.Sprintf("CreateVolume failed to create regional disk %#v: %v", name, err))
 		}
 		if len(diskLabels) != 0 {
+			klog.V(4).Infof("setting disk labels disk %v", volKey)
+
 			err = gceCS.CloudProvider.SetRegionalDiskLabels(ctx, disk, diskLabels)
+			if err != nil {
+				klog.Warningf("SetRegionalDiskLabels failed for %#v: %v", name, err)
+			}
+
 		}
 	default:
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("CreateVolume replication type '%s' is not supported", params.ReplicationType))
