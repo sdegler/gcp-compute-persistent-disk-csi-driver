@@ -87,7 +87,6 @@ func (gceCS *GCEControllerServer) CreateVolume(ctx context.Context, req *csi.Cre
 
 	// Apply Parameters (case-insensitive). We leave validation of
 	// the values to the cloud provider.
-
 	params, err := common.ExtractAndDefaultParameters(req.GetParameters())
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "failed to extract parameters: %v", err)
@@ -215,7 +214,6 @@ func (gceCS *GCEControllerServer) CreateVolume(ctx context.Context, req *csi.Cre
 			if err != nil {
 				klog.Warningf("SetRegionalDiskLabels failed for %#v: %v", name, err)
 			}
-
 		}
 	default:
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("CreateVolume replication type '%s' is not supported", params.ReplicationType))
