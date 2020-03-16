@@ -280,6 +280,24 @@ func (cloud *FakeCloudProvider) DetachDisk(ctx context.Context, deviceName, inst
 	return nil
 }
 
+func (cloud *FakeCloudProvider) SetZonalDiskLabels(ctx context.Context, disk *CloudDisk, labels map[string]string) error {
+	//req := &computev1.ZoneSetLabelsRequest{
+	//      Labels:           labels,
+	//      LabelFingerprint: disk.ZonalDisk.LabelFingerprint,
+	//}
+	// _, err := cloud.service.Disks.SetLabels(cloud.project, disk.ZonalDisk.Zone, disk.ZonalDisk.Name, req).Context(ctx).Do()
+	return nil
+}
+
+func (cloud *FakeCloudProvider) SetRegionalDiskLabels(ctx context.Context, disk *CloudDisk, labels map[string]string) error {
+	//req := &computev1.ZoneSetLabelsRequest{
+	//      Labels:           labels,
+	//      LabelFingerprint: disk.RegionalDisk.LabelFingerprint,
+	//}
+	//_, err := cloud.service.Disks.SetLabels(cloud.project, disk.RegionalDisk.Zone, disk.RegionalDisk.Name, req).Context(ctx).Do()
+	return nil
+}
+
 func (cloud *FakeCloudProvider) GetDiskTypeURI(volKey *meta.Key, diskType string) string {
 	switch volKey.Type() {
 	case meta.Zonal:

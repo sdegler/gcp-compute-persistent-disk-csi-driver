@@ -95,6 +95,7 @@ func (gceCS *GCEControllerServer) CreateVolume(ctx context.Context, req *csi.Cre
 	diskType := "pd-standard"
 	// Start process for creating a new disk
 	replicationType := replicationTypeNone
+	commaSeparatedDiskLabels := ""
 	diskEncryptionKmsKey := ""
 	for k, v := range req.GetParameters() {
 		if k == "csiProvisionerSecretName" || k == "csiProvisionerSecretNamespace" {
@@ -107,7 +108,7 @@ func (gceCS *GCEControllerServer) CreateVolume(ctx context.Context, req *csi.Cre
 			diskType = v
 		case common.ParameterKeyReplicationType:
 			replicationType = strings.ToLower(v)
-		case common.ParameterDiskLabel:
+		case common.ParameterKeyDiskLabels:
 			commaSeparatedDiskLabels = v
 		case common.ParameterKeyDiskEncryptionKmsKey:
 			// Resource names (e.g. "keyRings", "cryptoKeys", etc.) are case sensitive, so do not change case
@@ -116,7 +117,6 @@ func (gceCS *GCEControllerServer) CreateVolume(ctx context.Context, req *csi.Cre
 			return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("CreateVolume invalid option %q", k))
 		}
 	}
-
 	// commaSeparatedDiskLabels (e.g. foo=123,bar=456) splits into LabelKeyValueList ([foo=123, bar=456])
 	diskLabelKeyValueList := strings.Split(commaSeparatedDiskLabels, ",")
 	diskLabels := make(map[string]string, len(diskLabelKeyValueList))
