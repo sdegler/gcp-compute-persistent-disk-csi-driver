@@ -20,6 +20,7 @@ const (
 	// Keys for Storage Class Parameters
 	ParameterKeyType                 = "type"
 	ParameterKeyReplicationType      = "replication-type"
+	ParameterKeyDiskLabels           = "disk-labels"
 	ParameterKeyDiskEncryptionKmsKey = "disk-encryption-kms-key"
 
 	// Keys for Topology. This key will be shared amongst drivers from GCP

@@ -95,6 +95,7 @@ func (gceCS *GCEControllerServer) CreateVolume(ctx context.Context, req *csi.Cre
 	diskType := "pd-standard"
 	// Start process for creating a new disk
 	replicationType := replicationTypeNone
+	commaSeparatedDiskLabels := ""
 	diskEncryptionKmsKey := ""
 	for k, v := range req.GetParameters() {
 		if k == "csiProvisionerSecretName" || k == "csiProvisionerSecretNamespace" {
@@ -107,6 +108,8 @@ func (gceCS *GCEControllerServer) CreateVolume(ctx context.Context, req *csi.Cre
 			diskType = v
 		case common.ParameterKeyReplicationType:
 			replicationType = strings.ToLower(v)
+		case common.ParameterKeyDiskLabels:
+			commaSeparatedDiskLabels = v
 		case common.ParameterKeyDiskEncryptionKmsKey:
 			// Resource names (e.g. "keyRings", "cryptoKeys", etc.) are case sensitive, so do not change case
 			diskEncryptionKmsKey = v
@@ -114,6 +117,22 @@ func (gceCS *GCEControllerServer) CreateVolume(ctx context.Context, req *csi.Cre
 			return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("CreateVolume invalid option %q", k))
 		}
 	}
+	// commaSeparatedDiskLabels (e.g. foo=123,bar=456) splits into LabelKeyValueList ([foo=123, bar=456])
+	diskLabelKeyValueList := strings.Split(commaSeparatedDiskLabels, ",")
+	diskLabels := make(map[string]string, len(diskLabelKeyValueList))
+	// diskLabelKeyValueList (e.g. [foo=123, bar=456]) transforms into diskLabels ({ foo: 123, bar: 456 })
+	for _, v := range diskLabelKeyValueList {
+		labelKeyValue := strings.Split(v, "=")
+		labelKey := labelKeyValue[0]
+		labelValue := strings.Join(labelKeyValue[1:], "=")
+		diskLabels[labelKey] = labelValue
+	}
+
+	klog.V(4).Infof("diskLabels for disk %s has length %v", name, len(diskLabels))
+	for k, v := range diskLabels {
+		klog.V(4).Infof("CreateVolume %s has label key %s and value %s", name, k, v)
+	}
+
 	// Determine the zone or zones+region of the disk
 	var zones []string
 	var volKey *meta.Key
