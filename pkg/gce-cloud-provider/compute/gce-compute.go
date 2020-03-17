@@ -83,6 +83,7 @@ func (cloud *CloudProvider) SetZonalDiskLabels(ctx context.Context, disk *CloudD
 
 func (cloud *CloudProvider) SetRegionalDiskLabels(ctx context.Context, disk *CloudDisk, labels map[string]string) error {
 	var zone string
+
 	req := &compute.ZoneSetLabelsRequest{
 		Labels:           labels,
 		LabelFingerprint: disk.RegionalDisk.LabelFingerprint,
