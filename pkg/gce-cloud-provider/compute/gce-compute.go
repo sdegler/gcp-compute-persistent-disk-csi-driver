@@ -117,10 +117,16 @@ func (cloud *CloudProvider) SetRegionalDiskLabels(ctx context.Context, disk *Clo
                 LabelFingerprint: disk.RegionalDisk.LabelFingerprint,
         }
 
-        if strings.Contains(disk.RegionalDisk.Zone, "/") {
-                zone = disk.RegionalDisk.Zone[strings.LastIndex(disk.RegionalDisk.Zone, "/")+1:]
-        } else {
-                zone = disk.RegionalDisk.Zone
+	if disk.RegionalDisk.Zone == nil {
+		klog.V(4).Infof("label params: project %s, disk %s, name %s req %s", disk , disk.RegionalDisk.Name, req)
+		zone = "us-central1-a"
+	}
+	else {
+	        if strings.Contains(disk.RegionalDisk.Zone, "/") {
+                        zone = disk.RegionalDisk.Zone[strings.LastIndex(disk.RegionalDisk.Zone, "/")+1:]
+                } else {
+                        zone = disk.RegionalDisk.Zone
+	        }
         }
 
         klog.V(4).Infof("label params: project %s, zone  %s, name %s req %s", cloud.project, zone, disk.RegionalDisk.Name, req)
