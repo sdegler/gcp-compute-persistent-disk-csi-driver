@@ -76,27 +76,24 @@ func (cloud *CloudProvider) SetZonalDiskLabels(ctx context.Context, disk *CloudD
 		zone = disk.ZonalDisk.Zone
 	}
 
-	klog.V(4).Infof("label params: project %s, zone  %s, name %s req %s", cloud.project, zone, disk.ZonalDisk.Name, req)
 	_, err := cloud.service.Disks.SetLabels(cloud.project, zone, disk.ZonalDisk.Name, req).Context(ctx).Do()
 	return err
 }
 
 func (cloud *CloudProvider) SetRegionalDiskLabels(ctx context.Context, disk *CloudDisk, labels map[string]string) error {
-	var zone string
-
-	req := &compute.ZoneSetLabelsRequest{
+	var region string
+	req := &compute.RegionSetLabelsRequest{
 		Labels:           labels,
 		LabelFingerprint: disk.RegionalDisk.LabelFingerprint,
 	}
 
-	if strings.Contains(disk.RegionalDisk.Zone, "/") {
-		zone = disk.RegionalDisk.Zone[strings.LastIndex(disk.RegionalDisk.Zone, "/")+1:]
+	if strings.Contains(disk.RegionalDisk.Region, "/") {
+		region = disk.RegionalDisk.Region[strings.LastIndex(disk.RegionalDisk.Region, "/")+1:]
 	} else {
-		zone = disk.RegionalDisk.Zone
+		region = disk.RegionalDisk.Region
 	}
 
-	klog.V(4).Infof("label params: project %s, zone  %s, name %s req %s", cloud.project, zone, disk.RegionalDisk.Name, req)
-	_, err := cloud.service.Disks.SetLabels(cloud.project, zone, disk.RegionalDisk.Name, req).Context(ctx).Do()
+	_, err := cloud.service.RegionDisks.SetLabels(cloud.project, region, disk.RegionalDisk.Name, req).Context(ctx).Do()
 	return err
 }
 
